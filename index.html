@@ -3,215 +3,137 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Registro de Turnos</title>
+  <title>REGISTRO DE ENFERMERÍA - CUIDADOR</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f5f7fa;
+      font-family: Arial, sans-serif;
+      background: #e8f5e9;
       margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      padding: 20px;
+      text-transform: uppercase;
     }
 
     .container {
-      background: white;
-      margin-top: 30px;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      width: 90%;
       max-width: 500px;
+      margin: auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
 
     h2 {
       text-align: center;
-      margin-bottom: 20px;
+      color: #1b5e20;
     }
 
-    input, textarea, select {
+    label {
+      font-weight: bold;
+      color: #2e7d32;
+    }
+
+    input, select, textarea {
       width: 100%;
       padding: 10px;
       margin: 10px 0;
+      border: 1px solid #a5d6a7;
       border-radius: 8px;
-      border: 1px solid #ccc;
+      background-color: #f1f8e9;
+      text-transform: uppercase;
+    }
+
+    textarea {
+      resize: none;
+      height: 80px;
     }
 
     button {
       width: 100%;
       padding: 12px;
-      margin: 10px 0;
+      background-color: #43a047;
+      color: white;
       border: none;
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
     }
 
-    .btn-entrada {
-      background-color: #4caf50;
-      color: white;
+    button:hover {
+      background-color: #1b5e20;
     }
 
-    .btn-salida {
-      background-color: #2196f3;
-      color: white;
-    }
-
-    canvas {
-      border: 1px solid #ccc;
-      width: 100%;
-      height: 150px;
-      border-radius: 8px;
-      margin-top: 10px;
-    }
-
-    #mensaje {
+    .msg {
+      margin-top: 15px;
       text-align: center;
-      margin-top: 10px;
       font-weight: bold;
-    }
-
-    footer {
-      text-align: center;
-      padding: 20px;
-      font-size: 14px;
-      color: #888;
+      color: green;
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h2>REGISTRO DE ENFERMERÍA - CUIDADOR</h2>
+    <form id="registroForm">
+      <label for="nombre">APELLIDO Y NOMBRE</label>
+      <input type="text" id="nombre" name="nombre" required />
 
-<div class="container">
-  <h2>Registro de asistencia</h2>
-  <h2>ENFERMERIA  - CUIDADOR</h2>
-  <h2>Coordinado por Normiña</h2>
+      <label for="tipoPersonal">TIPO DE PERSONAL</label>
+      <select id="tipoPersonal" name="tipoPersonal" required>
+        <option value="">SELECCIONE...</option>
+        <option value="CUIDADOR">CUIDADOR</option>
+        <option value="ENFERMERÍA">ENFERMERÍA</option>
+      </select>
 
-  <select id="tipoPersonal">
-    <option value="">Tipo de personal</option>
-    <option value="Cuidador">Cuidador</option>
-    <option value="Enfermería">Enfermería</option>
-  </select>
+      <label for="tipoServicio">TIPO DE SERVICIO</label>
+      <select id="tipoServicio" name="tipoServicio" required>
+        <option value="">SELECCIONE...</option>
+        <option value="PRESTACIÓN">PRESTACIÓN</option>
+        <option value="GUARDIA">GUARDIA</option>
+      </select>
 
-  <select id="tipoServicio">
-    <option value="">Tipo de servicio</option>
-    <option value="Turno">Turno</option>
-    <option value="Prestación">Prestación</option>
-  </select>
+      <label for="tipoRegistro">TIPO DE REGISTRO</label>
+      <select id="tipoRegistro" name="tipoRegistro" required>
+        <option value="">SELECCIONE...</option>
+        <option value="INGRESO">INGRESO</option>
+        <option value="SALIDA">SALIDA</option>
+      </select>
 
-  <input type="text" id="cuidador" placeholder="Nombre del cuidador/enfermero" />
-  <input type="text" id="paciente" placeholder="Nombre del paciente/domicilio" />
-  
-  <select id="turno">
-    <option value="">Turno (si aplica)</option>
-    <option value="Mañana">Mañana</option>
-    <option value="Tarde">Tarde</option>
-    <option value="Noche">Noche</option>
-  </select>
+      <label for="observaciones">OBSERVACIONES</label>
+      <textarea id="observaciones" name="observaciones"></textarea>
 
-  <textarea id="observaciones" placeholder="Observaciones (opcional)"></textarea>
+      <input type="hidden" id="hora" name="hora" />
 
-  <p><b>Firma del cuidador:</b></p>
-  <canvas id="firmaCanvas"></canvas>
-  <button onclick="limpiarFirma()">🧽 Limpiar Firma</button>
+      <button type="submit">ENVIAR REGISTRO</button>
+      <div class="msg" id="mensaje"></div>
+    </form>
+  </div>
 
-  <button class="btn-entrada" onclick="registrar('entrada')">📍 Registrar Entrada</button>
-  <button class="btn-salida" onclick="registrar('salida')">✅ Registrar Salida</button>
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyGLjPiQp-zd39wxDPxbDw99qGIUkiTH0M7e7pHSaudDdHbH7em2ZCZxW-4_hY6GZxz9A/exec';
+    const form = document.getElementById('registroForm');
+    const mensaje = document.getElementById('mensaje');
 
-  <div id="mensaje"></div>
-</div>
+    form.addEventListener('submit', e => {
+      e.preventDefault();
 
-<footer>
-  Programado por Luis C. Parra | © 2025
-</footer>
+      const now = new Date();
+      const hora = now.toTimeString().split(' ')[0].slice(0, 5); // HH:MM
+      document.getElementById('hora').value = hora;
 
-<script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbw0_pI6DQ7ESwwwiqP-Ps5BZUglik2nwbZ066asp8NaLq55xK8iZb3z87StDyvCgKe8Pw/exec"
-
-let lat = "", lng = "";
-
-navigator.geolocation.getCurrentPosition(
-  position => {
-    lat = position.coords.latitude.toFixed(6);
-    lng = position.coords.longitude.toFixed(6);
-  },
-  error => console.log("Ubicación no permitida")
-);
-
-// Firma
-const canvas = document.getElementById("firmaCanvas");
-const ctx = canvas.getContext("2d");
-let dibujando = false;
-
-canvas.addEventListener("mousedown", () => dibujando = true);
-canvas.addEventListener("mouseup", () => dibujando = false);
-canvas.addEventListener("mousemove", dibujar);
-
-canvas.addEventListener("touchstart", e => { dibujando = true; });
-canvas.addEventListener("touchend", e => { dibujando = false; });
-canvas.addEventListener("touchmove", e => {
-  const toque = e.touches[0];
-  const rect = canvas.getBoundingClientRect();
-  const x = toque.clientX - rect.left;
-  const y = toque.clientY - rect.top;
-  if (dibujando) {
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  }
-  e.preventDefault();
-});
-
-function dibujar(e) {
-  if (!dibujando) return;
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  ctx.lineTo(x, y);
-  ctx.stroke();
-}
-
-function limpiarFirma() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-function registrar(tipo) {
-  const tipoPersonal = document.getElementById("tipoPersonal").value;
-  const tipoServicio = document.getElementById("tipoServicio").value;
-  const cuidador = document.getElementById("cuidador").value.trim();
-  const paciente = document.getElementById("paciente").value.trim();
-  const turno = document.getElementById("turno").value;
-  const observaciones = document.getElementById("observaciones").value.trim();
-  const firma = canvas.toDataURL();
-
-  if (!tipoPersonal || !tipoServicio || !cuidador || !paciente) {
-    document.getElementById("mensaje").style.color = "red";
-    document.getElementById("mensaje").innerText = "Faltan datos obligatorios.";
-    return;
-  }
-
-  fetch(scriptURL, {
-    method: "POST",
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      tipo, tipoPersonal, tipoServicio, cuidador, paciente,
-      turno, observaciones, latitud: lat, longitud: lng, firma
-    })
-  })
-  .then(res => res.text())
-  .then(msg => {
-    document.getElementById("mensaje").style.color = "green";
-    document.getElementById("mensaje").innerText = msg;
-    if (tipo === "salida") {
-      document.getElementById("observaciones").value = "";
-      limpiarFirma();
-    }
-  })
-  .catch(err => {
-    document.getElementById("mensaje").style.color = "red";
-    document.getElementById("mensaje").innerText = "Error: " + err;
-  });
-}
-</script>
-
+      fetch(scriptURL, {
+        method: 'POST',
+        body: new FormData(form)
+      })
+      .then(response => {
+        mensaje.innerText = 'REGISTRO ENVIADO CORRECTAMENTE ✅';
+        form.reset();
+        setTimeout(() => mensaje.innerText = '', 4000);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        mensaje.innerText = '⚠️ ERROR AL ENVIAR';
+      });
+    });
+  </script>
 </body>
 </html>
