@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registro de Turnos</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      background: white;
+      margin-top: 30px;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 500px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn-entrada {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    .btn-salida {
+      background-color: #2196f3;
+      color: white;
+    }
+
+    canvas {
+      border: 1px solid #ccc;
+      width: 100%;
+      height: 150px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    #mensaje {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 14px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Registro de Turno</h2>
+
+  <select id="tipoPersonal">
+    <option value="">Tipo de personal</option>
+    <option value="Cuidador">Cuidador</option>
+    <option value="Enfermería">Enfermería</option>
+  </select>
+
+  <select id="tipoServicio">
+    <option value="">Tipo de servicio</option>
+    <option value="Turno">Turno</option>
+    <option value="Prestación">Prestación</option>
+  </select>
+
+  <input type="text" id="cuidador" placeholder="Nombre del cuidador/enfermero" />
+  <input type="text" id="paciente" placeholder="Nombre del paciente/domicilio" />
+  
+  <select id="turno">
+    <option value="">Turno (si aplica)</option>
+    <option value="Mañana">Mañana</option>
+    <option value="Tarde">Tarde</option>
+    <option value="Noche">Noche</option>
+  </select>
+
+  <textarea id="observaciones" placeholder="Observaciones (opcional)"></textarea>
+
+  <p><b>Firma del cuidador:</b></p>
+  <canvas id="firmaCanvas"></canvas>
+  <button onclick="limpiarFirma()">🧽 Limpiar Firma</button>
+
+  <button class="btn-entrada" onclick="registrar('entrada')">📍 Registrar Entrada</button>
+  <button class="btn-salida" onclick="registrar('salida')">✅ Registrar Salida</button>
+
+  <div id="mensaje"></div>
+</div>
+
+<footer>
+  Programado por Luis C. Parra | © 2025
+</footer>
+
+<script>
+const scriptURL = "https://script.google.com/macros/s/AKfycbw0_pI6DQ7ESwwwiqP-Ps5BZUglik2nwbZ066asp8NaLq55xK8iZb3z87StDyvCgKe8Pw/exec"
+
+let lat = "", lng = "";
+
+navigator.geolocation.getCurrentPosition(
+  position => {
+    lat = position.coords.latitude.toFixed(6);
+    lng = position.coords.longitude.toFixed(6);
+  },
+  error => console.log("Ubicación no permitida")
+);
+
+// Firma
+const canvas = document.getElementById("firmaCanvas");
+const ctx = canvas.getContext("2d");
+let dibujando = false;
+
+canvas.addEventListener("mousedown", () => dibujando = true);
+canvas.addEventListener("mouseup", () => dibujando = false);
+canvas.addEventListener("mousemove", dibujar);
+
+canvas.addEventListener("touchstart", e => { dibujando = true; });
+canvas.addEventListener("touchend", e => { dibujando = false; });
+canvas.addEventListener("touchmove", e => {
+  const toque = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = toque.clientX - rect.left;
+  const y = toque.clientY - rect.top;
+  if (dibujando) {
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
+  e.preventDefault();
+});
+
+function dibujar(e) {
+  if (!dibujando) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  ctx.lineTo(x, y);
+  ctx.stroke();
+}
+
+function limpiarFirma() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function registrar(tipo) {
+  const tipoPersonal = document.getElementById("tipoPersonal").value;
+  const tipoServicio = document.getElementById("tipoServicio").value;
+  const cuidador = document.getElementById("cuidador").value.trim();
+  const paciente = document.getElementById("paciente").value.trim();
+  const turno = document.getElementById("turno").value;
+  const observaciones = document.getElementById("observaciones").value.trim();
+  const firma = canvas.toDataURL();
+
+  if (!tipoPersonal || !tipoServicio || !cuidador || !paciente) {
+    document.getElementById("mensaje").style.color = "red";
+    document.getElementById("mensaje").innerText = "Faltan datos obligatorios.";
+    return;
+  }
+
+  fetch(scriptURL, {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      tipo, tipoPersonal, tipoServicio, cuidador, paciente,
+      turno, observaciones, latitud: lat, longitud: lng, firma
+    })
+  })
+  .then(res => res.text())
+  .then(msg => {
+    document.getElementById("mensaje").style.color = "green";
+    document.getElementById("mensaje").innerText = msg;
+    if (tipo === "salida") {
+      document.getElementById("observaciones").value = "";
+      limpiarFirma();
+    }
+  })
+  .catch(err => {
+    document.getElementById("mensaje").style.color = "red";
+    document.getElementById("mensaje").innerText = "Error: " + err;
+  });
+}
+</script>
+
+</body>
+</html>
