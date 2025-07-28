@@ -13,7 +13,35 @@
       text-transform: uppercase;
     }
 
-    .container {
+    .splash, .login-container, .container {
+      display: none;
+    }
+
+    .splash {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: #d0f0c0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .splash h1 {
+      font-size: 30px;
+      color: #2e7d32;
+      margin: 10px;
+    }
+
+    .splash h3 {
+      font-size: 16px;
+      font-style: italic;
+      color: #4caf50;
+    }
+
+    .login-container, .container {
       max-width: 500px;
       margin: auto;
       background: #ffffff;
@@ -56,6 +84,7 @@
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
+      margin-top: 10px;
     }
 
     button:hover {
@@ -68,10 +97,46 @@
       font-weight: bold;
       color: green;
     }
+
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+
+    /* Botones secundarios (Cancelar, Salir) */
+    .btn-secondary {
+      background-color: #bdbdbd;
+      color: black;
+      margin-top: 5px;
+    }
+    .btn-secondary:hover {
+      background-color: #757575;
+      color: white;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+
+  <!-- Splash -->
+  <div class="splash" id="splash">
+    <h1>INTERNACIÓN DOMICILIARIA</h1>
+    <h8>Programado por Lic. Luis C. Parra</h8>
+  </div>
+
+  <!-- Login -->
+  <div class="login-container" id="login">
+    <h2>INICIO DE SESIÓN</h2>
+    <label for="dni">USUARIO (DNI)</label>
+    <input type="text" id="dni" />
+    <label for="pass">CONTRASEÑA</label>
+    <input type="password" id="pass" />
+    <button id="btnLogin">INGRESAR</button>
+    <button id="btnCancelarLogin" class="btn-secondary">CANCELAR</button>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+
+  <!-- Formulario principal -->
+  <div class="container" id="formulario">
     <h2>REGISTRO DE PRESTACIONES</h2>
     <h2>ENFERMEROS (AS) - CUIDADORES (AS)</h2>
     <form id="registroForm">
@@ -105,33 +170,116 @@
       <input type="hidden" id="hora" name="hora" />
 
       <button type="submit">ENVIAR REGISTRO</button>
+      <button type="button" id="btnSalir" class="btn-secondary">SALIR</button>
       <div class="msg" id="mensaje"></div>
     </form>
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzlTSXqPxVSLLLyp4J7J42wqy-ZBsaSG0KL9T6vCrwKU3eeOiXo19hIEdiJ8BKAxN1NwA/exec';
+    const loginScriptURL = 'https://script.google.com/macros/s/AKfycbyk5W_x_kXF5wbUIXkM38n0UcQbPmHD7URaoUnOoU_Z6t7Ztlxw1ak3Pp4hTfC-Wy3G/exec';
+    const formScriptURL = 'https://script.google.com/macros/s/AKfycbzlTSXqPxVSLLLyp4J7J42wqy-ZBsaSG0KL9T6vCrwKU3eeOiXo19hIEdiJ8BKAxN1NwA/exec';
+
     const form = document.getElementById('registroForm');
     const mensaje = document.getElementById('mensaje');
+    const loginMsg = document.getElementById('loginMsg');
 
+    // Mostrar splash 3 segundos, luego login
+    window.addEventListener('load', () => {
+      const splash = document.getElementById('splash');
+      const login = document.getElementById('login');
+      splash.style.display = 'flex';
+      setTimeout(() => {
+        splash.style.display = 'none';
+        login.style.display = 'block';
+      }, 3000);
+    });
+
+    // Poner inputs en mayúsculas
+    document.addEventListener('input', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        e.target.value = e.target.value.toUpperCase();
+      }
+    });
+
+    // Botón Cancelar en login cierra pestaña o ventana
+    document.getElementById('btnCancelarLogin').addEventListener('click', () => {
+      window.close(); // Intenta cerrar la ventana
+      // Si no se cierra, avisa
+      alert('Puede cerrar esta pestaña si desea salir.');
+    });
+
+    // Función login
+    document.getElementById('btnLogin').addEventListener('click', () => {
+      const dni = document.getElementById('dni').value.trim();
+      const pass = document.getElementById('pass').value.trim();
+
+      if (!dni || !pass) {
+        loginMsg.innerHTML = `<div class="error">Debe completar usuario y contraseña</div>`;
+        return;
+      }
+
+      loginMsg.innerHTML = "Verificando...";
+
+      fetch(loginScriptURL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `accion=login&dni=${encodeURIComponent(dni)}&pass=${encodeURIComponent(pass)}`
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          loginMsg.innerHTML = "";
+          document.getElementById('login').style.display = 'none';
+          document.getElementById('formulario').style.display = 'block';
+          document.getElementById('nombre').value = data.nombre || '';
+        } else {
+          loginMsg.innerHTML = `<div class="error">⚠️ ${data.message || 'Usuario o contraseña incorrectos'}</div>`;
+        }
+      })
+      .catch(() => {
+        loginMsg.innerHTML = `<div class="error">⚠️ ERROR DE CONEXIÓN</div>`;
+      });
+    });
+
+    // Botón salir en formulario vuelve al login y limpia formulario y mensajes
+    document.getElementById('btnSalir').addEventListener('click', () => {
+      document.getElementById('formulario').style.display = 'none';
+      document.getElementById('login').style.display = 'block';
+      form.reset();
+      mensaje.innerText = '';
+      loginMsg.innerText = '';
+      // Limpiar campos login
+      document.getElementById('dni').value = '';
+      document.getElementById('pass').value = '';
+    });
+
+    // Enviar formulario
     form.addEventListener('submit', e => {
       e.preventDefault();
-
       const now = new Date();
-      const hora = now.toTimeString().split(' ')[0].slice(0, 5); // HH:MM
-      document.getElementById('hora').value = hora;
+      document.getElementById('hora').value = now.toTimeString().split(' ')[0].slice(0, 5);
 
-      fetch(scriptURL, {
+      fetch(formScriptURL, {
         method: 'POST',
         body: new FormData(form)
       })
-      .then(response => {
-        mensaje.innerText = 'REGISTRO ENVIADO CORRECTAMENTE ✅';
+      .then(() => {
+        mensaje.innerText = '✅ REGISTRO ENVIADO';
         form.reset();
-        setTimeout(() => mensaje.innerText = '', 4000);
+        setTimeout(() => {
+          mensaje.innerText = '';
+          // Volver a login automáticamente después de enviar
+          document.getElementById('formulario').style.display = 'none';
+          document.getElementById('login').style.display = 'block';
+          // Limpiar campos login
+          document.getElementById('dni').value = '';
+          document.getElementById('pass').value = '';
+          loginMsg.innerText = '';
+        }, 3000);
       })
-      .catch(error => {
-        console.error('Error:', error);
+      .catch(() => {
         mensaje.innerText = '⚠️ ERROR AL ENVIAR';
       });
     });
